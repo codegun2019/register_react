@@ -5,6 +5,9 @@ const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
+var jwt = require('jsonwebtoken');
+const secret = 'Fullstack-Login-2'
+
 const app = express();
 app.use(cors());
 const jsonParser = bodyParser.json();
@@ -28,16 +31,16 @@ app.post('/register', jsonParser, function (req, res, next) {
     // Check if the email already exists in the database
     connection.execute(
         'SELECT COUNT(*) AS count FROM st_users WHERE username = ?',
-        [req.body.email],
+        [req.body.username],
         function (err, results, fields) {
             if (err) {
                 res.json({ status: 'error', message: err });
                 return;
             }
 
-            const emailCount = results[0].count;
+            const username = results[0].count;
 
-            if (emailCount > 0) {
+            if (username > 0) {
                 // username already exists, return an error
                 res.json({ status: 'error', message: 'username already exists' });
             } else {
@@ -62,9 +65,30 @@ app.post('/register', jsonParser, function (req, res, next) {
     );
 });
 // Login
-// create api login REACT
-app.post('/login', jsonParser, function (req, res, next) {
+app.post('/login', jsonParser,  function (req, res, next) {
+    connection.execute(
+        'SELECT * FROM st_users WHERE username = ?',
+        [req.body.username],
+        function (err, st_users, fields) {
+            if (err) {  res.json({ status: 'error', message: err });  return; }
+            if(st_users.length == 0) {  res.json({ status: 'error', message: 'no users found' }); return;}
+            // Load hash from your password DB.
+            bcrypt.compare(req.body.password, st_users[0].password, function(err, isLogin) {
+                console.log(isLogin);
+                if (isLogin) {
+                  // Passwords match, user is logged in
+                  res.json({ status: 'ok',message: "login success" });
+                } else {
+                  // Passwords do not match, user is not logged in
+                  console.log('Hashed Password from DB:', st_users[0].password);
+                  console.log('Password from Request:', req.body.password);
+                  res.json({ status: 'error',message: "login fail" });
+                }
+            });
+        }
+    );
 });
+
 // App   
 app.listen(3333, function () {
     console.log('CORS-enabled web server listening on port 3333');
