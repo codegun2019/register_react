@@ -10,17 +10,24 @@ app.use(cors());
 const jsonParser = bodyParser.json();
 
 // Your MySQL connection code here...
+// const connection = mysql.createConnection({
+//     host: 'localhost',
+//     user: 'root',
+//     password: 'root',
+//     database: 'mydb'
+// });
+
 const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'root',
-    database: 'mydb'
+    host: '212.80.213.170',
+    user: 'appdayco_appdayco',
+    password: 'cPqCqhXCdDDPb8CmsLxu',
+    database: 'appdayco_appdayco'
 });
 // Register
 app.post('/register', jsonParser, function (req, res, next) {
     // Check if the email already exists in the database
     connection.execute(
-        'SELECT COUNT(*) AS count FROM users WHERE email = ?',
+        'SELECT COUNT(*) AS count FROM st_users WHERE username = ?',
         [req.body.email],
         function (err, results, fields) {
             if (err) {
@@ -31,14 +38,16 @@ app.post('/register', jsonParser, function (req, res, next) {
             const emailCount = results[0].count;
 
             if (emailCount > 0) {
-                // Email already exists, return an error
-                res.json({ status: 'error', message: 'Email already exists' });
+                // username already exists, return an error
+                res.json({ status: 'error', message: 'username already exists' });
             } else {
-                // Email does not exist, proceed with the insert
+                // username does not exist, proceed with the insert
                 bcrypt.hash(req.body.password, saltRounds, function (hashErr, hash) {
                     connection.execute(
-                        'INSERT INTO users (email, password, fname, lname) VALUES (?, ?, ?, ?)',
-                        [req.body.email, hash, req.body.fname, req.body.lname],
+                        //'INSERT INTO users (email, password, fname, lname) VALUES (?, ?, ?, ?)',
+                        //[req.body.email, hash, req.body.fname, req.body.lname],
+                        'INSERT INTO st_users (img, username, password, email, point, ip, status, timeadd, cash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        [req.body.img, req.body.username, hash, req.body.email, req.body.point, req.body.ip, req.body.status, req.body.timeadd, req.body.cash],
                         function (insertErr, insertResults, insertFields) {
                             if (insertErr) {
                                 res.json({ status: 'error', message: insertErr });
@@ -53,6 +62,7 @@ app.post('/register', jsonParser, function (req, res, next) {
     );
 });
 // Login
+// create api login REACT
 app.post('/login', jsonParser, function (req, res, next) {
 });
 // App   
